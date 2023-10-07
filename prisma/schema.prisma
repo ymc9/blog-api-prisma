@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator zod {
+  provider = "zod-prisma-types"
+}
+
+model User {
+  id              Int         @id @default(autoincrement())
+  email           String      @unique
+  posts           Post[]
+  spaceMembership SpaceUser[]
+  ownedSpaces     Space[]
+}
+
+model Space {
+  id      Int         @id @default(autoincrement())
+  owner   User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId Int
+  name    String
+  slug    String      @unique
+  posts   Post[]
+  members SpaceUser[]
+}
+
+enum SpaceUserRole {
+  MEMBER
+  ADMIN
+}
+
+model SpaceUser {
+  id      Int           @id @default(autoincrement())
+  space   Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  spaceId Int
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int
+  role    SpaceUserRole @default(MEMBER)
+
+  @@unique([spaceId, userId])
+}
+
+model Post {
+  id        Int     @id @default(autoincrement())
+  title     String
+  published Boolean @default(false)
+  author    User?   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  Int?
+  space     Space?  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  spaceId   Int?
+}
