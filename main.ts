@@ -137,8 +137,11 @@ async function main() {
             where: {
                 spaceId: space.id,
                 OR: [
-                    // 1. published
-                    { published: true },
+                    // 1. published and current user is a member of the space
+                    {
+                        published: true,
+                        space: { members: { some: { userId: req.uid! } } },
+                    },
                     // 2. authored by the current user
                     { authorId: req.uid! },
                     // 3. belongs to space owned by the current user
